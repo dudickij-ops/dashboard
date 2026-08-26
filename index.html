@@ -17,6 +17,9 @@
     --border: rgba(11,11,11,0.10);
     --series-1: #2a78d6;
     --series-2: #eb6834;
+    --warn-soft: #fdf5e6;
+    --warn-line: #ecd6a6;
+    --warn-ink: #8a5a10;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
@@ -31,6 +34,9 @@
       --border: rgba(255,255,255,0.10);
       --series-1: #3987e5;
       --series-2: #d95926;
+      --warn-soft: #2a2116;
+      --warn-line: #4d3d20;
+      --warn-ink: #d9a44e;
     }
   }
   :root[data-theme="dark"] {
@@ -44,6 +50,9 @@
     --border: rgba(255,255,255,0.10);
     --series-1: #3987e5;
     --series-2: #d95926;
+    --warn-soft: #2a2116;
+    --warn-line: #4d3d20;
+    --warn-ink: #d9a44e;
   }
 
   * { box-sizing: border-box; }
@@ -57,6 +66,13 @@
   .wrap { max-width: 900px; margin: 0 auto; }
   h1 { font-size: 22px; margin: 0 0 4px; }
   .source { color: var(--muted); font-size: 13px; margin: 0 0 24px; }
+
+  .warn { background: var(--warn-soft); border: 1px solid var(--warn-line);
+           border-radius: 10px; padding: 15px 18px; margin-bottom: 12px; }
+  .warn-head { font-weight: 600; font-size: 14.5px; color: var(--warn-ink); }
+  .warn ul { margin: 8px 0 0; padding-left: 20px; }
+  .warn li { font-size: 14.5px; margin-bottom: 3px; }
+  .warn p { margin: 10px 0 0; font-size: 13.5px; color: var(--text-secondary); }
 
   .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
             gap: 12px; margin-bottom: 12px; }
@@ -100,16 +116,18 @@
   <h1>Дашборд продаж</h1>
   <p class="source">Источник: Google Sheets API (по ключу)</p>
 
-  <div class="tiles"><div class="tile"><div class="tile-title">Всего заказов</div><div class="tile-value">575</div><div class="tile-note">за 4 мес.</div></div><div class="tile"><div class="tile-title">Всего выручка</div><div class="tile-value">1 611 000</div><div class="tile-note">за 4 мес.</div></div></div>
+  <div class="warn"><div class="warn-head">Данные требуют внимания (1 замечание)</div><ul><li>«Апрель»: 5 020 000 000 000 в «Выручка» — в 12 613 065 раз больше остальных. Похоже на лишние нули.</li></ul><p>Цифры показаны как есть — исправлять их за вас нельзя. Поправьте в таблице и обновите страницу.</p></div>
+
+  <div class="tiles"><div class="tile"><div class="tile-title">Всего заказов</div><div class="tile-value">697</div><div class="tile-note">за 5 мес.</div></div><div class="tile"><div class="tile-title">Всего выручка</div><div class="tile-value">5 020 004 354 632</div><div class="tile-note">за 5 мес.</div></div></div>
 
   <div class="charts">
-    <div class="card"><h2>Заказы по месяцам</h2><svg viewBox="0 0 400 240" role="img" aria-label="Заказы по месяцам"><line x1="8" y1="75.0" x2="392" y2="75.0" class="grid"/><line x1="8" y1="120.0" x2="392" y2="120.0" class="grid"/><line x1="8" y1="165.0" x2="392" y2="165.0" class="grid"/><g class="bar" data-label="Январь" data-value="120" data-metric="Заказы"><path d="M73.0,210 V92.7 Q73.0,88.7 77.0,88.7 H125.0 Q129.0,88.7 129.0,92.7 V210 Z" fill="var(--series-1)"/><text x="101.0" y="80.7" class="value">120</text><text x="101.0" y="228.0" class="tick">Январь</text></g><g class="bar" data-label="Февраль" data-value="145" data-metric="Заказы"><path d="M139.0,210 V67.4 Q139.0,63.4 143.0,63.4 H191.0 Q195.0,63.4 195.0,67.4 V210 Z" fill="var(--series-1)"/><text x="167.0" y="55.4" class="value">145</text><text x="167.0" y="228.0" class="tick">Февраль</text></g><g class="bar" data-label="Март" data-value="132" data-metric="Заказы"><path d="M205.0,210 V80.5 Q205.0,76.5 209.0,76.5 H257.0 Q261.0,76.5 261.0,80.5 V210 Z" fill="var(--series-1)"/><text x="233.0" y="68.5" class="value">132</text><text x="233.0" y="228.0" class="tick">Март</text></g><g class="bar" data-label="Апрель" data-value="178" data-metric="Заказы"><path d="M271.0,210 V34.0 Q271.0,30.0 275.0,30.0 H323.0 Q327.0,30.0 327.0,34.0 V210 Z" fill="var(--series-1)"/><text x="299.0" y="22.0" class="value">178</text><text x="299.0" y="228.0" class="tick">Апрель</text></g><line x1="8" y1="210" x2="392" y2="210" class="axis"/></svg></div>
-    <div class="card"><h2>Выручка по месяцам</h2><svg viewBox="0 0 400 240" role="img" aria-label="Выручка по месяцам"><line x1="8" y1="75.0" x2="392" y2="75.0" class="grid"/><line x1="8" y1="120.0" x2="392" y2="120.0" class="grid"/><line x1="8" y1="165.0" x2="392" y2="165.0" class="grid"/><g class="bar" data-label="Январь" data-value="340 000" data-metric="Выручка"><path d="M73.0,210 V92.1 Q73.0,88.1 77.0,88.1 H125.0 Q129.0,88.1 129.0,92.1 V210 Z" fill="var(--series-2)"/><text x="101.0" y="80.1" class="value">340 000</text><text x="101.0" y="228.0" class="tick">Январь</text></g><g class="bar" data-label="Февраль" data-value="398 000" data-metric="Выручка"><path d="M139.0,210 V71.3 Q139.0,67.3 143.0,67.3 H191.0 Q195.0,67.3 195.0,71.3 V210 Z" fill="var(--series-2)"/><text x="167.0" y="59.3" class="value">398 000</text><text x="167.0" y="228.0" class="tick">Февраль</text></g><g class="bar" data-label="Март" data-value="371 000" data-metric="Выручка"><path d="M205.0,210 V81.0 Q205.0,77.0 209.0,77.0 H257.0 Q261.0,77.0 261.0,81.0 V210 Z" fill="var(--series-2)"/><text x="233.0" y="69.0" class="value">371 000</text><text x="233.0" y="228.0" class="tick">Март</text></g><g class="bar" data-label="Апрель" data-value="502 000" data-metric="Выручка"><path d="M271.0,210 V34.0 Q271.0,30.0 275.0,30.0 H323.0 Q327.0,30.0 327.0,34.0 V210 Z" fill="var(--series-2)"/><text x="299.0" y="22.0" class="value">502 000</text><text x="299.0" y="228.0" class="tick">Апрель</text></g><line x1="8" y1="210" x2="392" y2="210" class="axis"/></svg></div>
+    <div class="card"><h2>Заказы по месяцам</h2><svg viewBox="0 0 400 240" role="img" aria-label="Заказы по месяцам"><line x1="8" y1="75.0" x2="392" y2="75.0" class="grid"/><line x1="8" y1="120.0" x2="392" y2="120.0" class="grid"/><line x1="8" y1="165.0" x2="392" y2="165.0" class="grid"/><g class="bar" data-label="Январь" data-value="120" data-metric="Заказы"><path d="M40.0,210 V92.7 Q40.0,88.7 44.0,88.7 H92.0 Q96.0,88.7 96.0,92.7 V210 Z" fill="var(--series-1)"/><text x="68.0" y="80.7" class="value">120</text><text x="68.0" y="228.0" class="tick">Январь</text></g><g class="bar" data-label="Февраль" data-value="145" data-metric="Заказы"><path d="M106.0,210 V67.4 Q106.0,63.4 110.0,63.4 H158.0 Q162.0,63.4 162.0,67.4 V210 Z" fill="var(--series-1)"/><text x="134.0" y="55.4" class="value">145</text><text x="134.0" y="228.0" class="tick">Февраль</text></g><g class="bar" data-label="Март" data-value="132" data-metric="Заказы"><path d="M172.0,210 V80.5 Q172.0,76.5 176.0,76.5 H224.0 Q228.0,76.5 228.0,80.5 V210 Z" fill="var(--series-1)"/><text x="200.0" y="68.5" class="value">132</text><text x="200.0" y="228.0" class="tick">Март</text></g><g class="bar" data-label="Апрель" data-value="178" data-metric="Заказы"><path d="M238.0,210 V34.0 Q238.0,30.0 242.0,30.0 H290.0 Q294.0,30.0 294.0,34.0 V210 Z" fill="var(--series-1)"/><text x="266.0" y="22.0" class="value">178</text><text x="266.0" y="228.0" class="tick">Апрель</text></g><g class="bar" data-label="Май" data-value="122" data-metric="Заказы"><path d="M304.0,210 V90.6 Q304.0,86.6 308.0,86.6 H356.0 Q360.0,86.6 360.0,90.6 V210 Z" fill="var(--series-1)"/><text x="332.0" y="78.6" class="value">122</text><text x="332.0" y="228.0" class="tick">Май</text></g><line x1="8" y1="210" x2="392" y2="210" class="axis"/></svg></div>
+    <div class="card"><h2>Выручка по месяцам</h2><svg viewBox="0 0 400 240" role="img" aria-label="Выручка по месяцам"><line x1="8" y1="75.0" x2="392" y2="75.0" class="grid"/><line x1="8" y1="120.0" x2="392" y2="120.0" class="grid"/><line x1="8" y1="165.0" x2="392" y2="165.0" class="grid"/><g class="bar" data-label="Январь" data-value="340 000" data-metric="Выручка"><path d="M40.0,210 V210.0 Q40.0,210.0 40.0,210.0 H96.0 Q96.0,210.0 96.0,210.0 V210 Z" fill="var(--series-2)"/><text x="68.0" y="202.0" class="value">340 000</text><text x="68.0" y="228.0" class="tick">Январь</text></g><g class="bar" data-label="Февраль" data-value="398 000" data-metric="Выручка"><path d="M106.0,210 V210.0 Q106.0,210.0 106.0,210.0 H162.0 Q162.0,210.0 162.0,210.0 V210 Z" fill="var(--series-2)"/><text x="134.0" y="202.0" class="value">398 000</text><text x="134.0" y="228.0" class="tick">Февраль</text></g><g class="bar" data-label="Март" data-value="371 000" data-metric="Выручка"><path d="M172.0,210 V210.0 Q172.0,210.0 172.0,210.0 H228.0 Q228.0,210.0 228.0,210.0 V210 Z" fill="var(--series-2)"/><text x="200.0" y="202.0" class="value">371 000</text><text x="200.0" y="228.0" class="tick">Март</text></g><g class="bar" data-label="Апрель" data-value="5 020 000 000 000" data-metric="Выручка"><path d="M238.0,210 V34.0 Q238.0,30.0 242.0,30.0 H290.0 Q294.0,30.0 294.0,34.0 V210 Z" fill="var(--series-2)"/><text x="266.0" y="22.0" class="value">5 020 000 000 000</text><text x="266.0" y="228.0" class="tick">Апрель</text></g><g class="bar" data-label="Май" data-value="3 245 632" data-metric="Выручка"><path d="M304.0,210 V210.0 Q304.0,210.0 304.0,210.0 H360.0 Q360.0,210.0 360.0,210.0 V210 Z" fill="var(--series-2)"/><text x="332.0" y="202.0" class="value">3 245 632</text><text x="332.0" y="228.0" class="tick">Май</text></g><line x1="8" y1="210" x2="392" y2="210" class="axis"/></svg></div>
   </div>
 
   <details>
     <summary>Показать данные таблицей</summary>
-    <table><thead><tr><th>Месяц</th><th>Заказы</th><th>Выручка</th></tr></thead><tbody><tr><td>Январь</td><td>120</td><td>340000</td></tr><tr><td>Февраль</td><td>145</td><td>398000</td></tr><tr><td>Март</td><td>132</td><td>371000</td></tr><tr><td>Апрель</td><td>178</td><td>502000</td></tr></tbody></table>
+    <table><thead><tr><th>Месяц</th><th>Заказы</th><th>Выручка</th></tr></thead><tbody><tr><td>Январь</td><td>120</td><td>340000</td></tr><tr><td>Февраль</td><td>145</td><td>398000</td></tr><tr><td>Март</td><td>132</td><td>371000</td></tr><tr><td>Апрель</td><td>178</td><td>5020000000000</td></tr><tr><td>Май</td><td>122</td><td>3245632</td></tr></tbody></table>
   </details>
 </div>
 

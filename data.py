@@ -101,6 +101,79 @@ def source_name() -> str:
     return "выдуманные данные"
 
 
+def check_rows(rows: list[dict], label_col: str, value_cols: list[str]) -> list[str]:
+    """Ищет то, что сломает картинку. Ничего не чинит — только называет вслух.
+
+    Правило: подозрительные данные показываем, а не прячем и не угадываем
+    за клиента, что он имел в виду.
+    """
+    if not rows:
+        return ["Таблица пустая — читать нечего."]
+
+    problems = _check_labels(rows, label_col)
+    for col in value_cols:
+        problems += _check_column(rows, label_col, col)
+    return problems
+
+
+def _check_labels(rows: list[dict], label_col: str) -> list[str]:
+    """Пустые и повторяющиеся подписи: и то и другое ломает ось."""
+    problems: list[str] = []
+    seen: set[str] = set()
+
+    for row in rows:
+        name = row.get(label_col, "")
+        if not name:
+            problems.append(f"Есть строка без значения в «{label_col}».")
+        elif name in seen:
+            problems.append(f"«{name}» встречается больше одного раза.")
+        else:
+            seen.add(name)
+
+    return problems
+
+
+# Во сколько раз значение должно превысить медиану, чтобы счесть его выбросом.
+OUTLIER_FACTOR = 50
+
+
+def _check_column(rows: list[dict], label_col: str, col: str) -> list[str]:
+    """Нечисловые, пустые и выбросы в одной числовой колонке."""
+    problems: list[str] = []
+    numbers: list[tuple[str, int]] = []
+
+    for row in rows:
+        name = row.get(label_col, "?")
+        raw = row.get(col, "")
+        if raw == "":
+            problems.append(f"«{name}»: пустое значение в «{col}».")
+        else:
+            try:
+                numbers.append((name, int(raw)))
+            except ValueError:
+                problems.append(f"«{name}»: «{raw}» в «{col}» — не число.")
+
+    return problems + _check_outliers(numbers, col)
+
+
+def _check_outliers(numbers: list[tuple[str, int]], col: str) -> list[str]:
+    """Сравниваем с медианой, а не со средним: среднее сам выброс и утаскивает."""
+    if len(numbers) < 3:
+        return []
+
+    ordered = sorted(value for _, value in numbers)
+    median = ordered[len(ordered) // 2]
+    if median <= 0:
+        return []
+
+    return [
+        f"«{name}»: {value:,} в «{col}» — в {value // median:,} раз больше "
+        f"остальных. Похоже на лишние нули.".replace(",", " ")
+        for name, value in numbers
+        if value > median * OUTLIER_FACTOR
+    ]
+
+
 def load_rows() -> list[dict]:
     """Настоящие данные, если настроены. Иначе выдуманные."""
     if SHEET_ID and API_KEY:

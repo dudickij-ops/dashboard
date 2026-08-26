@@ -7,15 +7,14 @@
 import html
 import pathlib
 
-from data import load_rows, source_name
+from data import check_rows, load_rows, source_name
 
 OUT = pathlib.Path(__file__).parent / "index.html"
 
-# Цвета проверены валидатором палитры в обоих режимах.
-SERIES = {
-    "Заказы": {"light": "#2a78d6", "dark": "#3987e5"},
-    "Выручка": {"light": "#eb6834", "dark": "#d95926"},
-}
+# Названия колонок в таблице. Поменялись заголовки — правим здесь, в одном месте.
+COL_MONTH = "Месяц"
+COL_ORDERS = "Заказы"
+COL_REVENUE = "Выручка"
 
 
 def money(value: int) -> str:
@@ -105,18 +104,33 @@ def table(rows: list[dict]) -> str:
     return f"<table><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table>"
 
 
+def warnings_block(problems: list[str]) -> str:
+    """Претензии к данным показываем на самой странице, а не в консоли сборки."""
+    if not problems:
+        return ""
+    items = "".join(f"<li>{html.escape(p)}</li>" for p in problems)
+    word = "замечание" if len(problems) == 1 else "замечания"
+    return (
+        f'<div class="warn"><div class="warn-head">Данные требуют внимания '
+        f"({len(problems)} {word})</div><ul>{items}</ul>"
+        f"<p>Цифры показаны как есть — исправлять их за вас нельзя. "
+        f"Поправьте в таблице и обновите страницу.</p></div>"
+    )
+
+
 def build() -> str:
     rows = load_rows()
-    orders = sum(int(r["Заказы"]) for r in rows)
-    revenue = sum(int(r["Выручка"]) for r in rows)
+    orders = sum(int(r[COL_ORDERS]) for r in rows)
+    revenue = sum(int(r[COL_REVENUE]) for r in rows)
     months = len(rows)
 
     return TEMPLATE.format(
         source=html.escape(source_name()),
+        warnings=warnings_block(check_rows(rows, COL_MONTH, [COL_ORDERS, COL_REVENUE])),
         tiles=stat_tile("Всего заказов", money(orders), f"за {months} мес.")
         + stat_tile("Всего выручка", money(revenue), f"за {months} мес."),
-        chart_orders=bar_chart(rows, "Месяц", "Заказы", "series-1"),
-        chart_revenue=bar_chart(rows, "Месяц", "Выручка", "series-2"),
+        chart_orders=bar_chart(rows, COL_MONTH, COL_ORDERS, "series-1"),
+        chart_revenue=bar_chart(rows, COL_MONTH, COL_REVENUE, "series-2"),
         table=table(rows),
     )
 
@@ -140,6 +154,9 @@ TEMPLATE = """<!doctype html>
     --border: rgba(11,11,11,0.10);
     --series-1: #2a78d6;
     --series-2: #eb6834;
+    --warn-soft: #fdf5e6;
+    --warn-line: #ecd6a6;
+    --warn-ink: #8a5a10;
   }}
   @media (prefers-color-scheme: dark) {{
     :root:not([data-theme="light"]) {{
@@ -154,6 +171,9 @@ TEMPLATE = """<!doctype html>
       --border: rgba(255,255,255,0.10);
       --series-1: #3987e5;
       --series-2: #d95926;
+      --warn-soft: #2a2116;
+      --warn-line: #4d3d20;
+      --warn-ink: #d9a44e;
     }}
   }}
   :root[data-theme="dark"] {{
@@ -167,6 +187,9 @@ TEMPLATE = """<!doctype html>
     --border: rgba(255,255,255,0.10);
     --series-1: #3987e5;
     --series-2: #d95926;
+    --warn-soft: #2a2116;
+    --warn-line: #4d3d20;
+    --warn-ink: #d9a44e;
   }}
 
   * {{ box-sizing: border-box; }}
@@ -180,6 +203,13 @@ TEMPLATE = """<!doctype html>
   .wrap {{ max-width: 900px; margin: 0 auto; }}
   h1 {{ font-size: 22px; margin: 0 0 4px; }}
   .source {{ color: var(--muted); font-size: 13px; margin: 0 0 24px; }}
+
+  .warn {{ background: var(--warn-soft); border: 1px solid var(--warn-line);
+           border-radius: 10px; padding: 15px 18px; margin-bottom: 12px; }}
+  .warn-head {{ font-weight: 600; font-size: 14.5px; color: var(--warn-ink); }}
+  .warn ul {{ margin: 8px 0 0; padding-left: 20px; }}
+  .warn li {{ font-size: 14.5px; margin-bottom: 3px; }}
+  .warn p {{ margin: 10px 0 0; font-size: 13.5px; color: var(--text-secondary); }}
 
   .tiles {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
             gap: 12px; margin-bottom: 12px; }}
@@ -222,6 +252,8 @@ TEMPLATE = """<!doctype html>
 <div class="wrap">
   <h1>Дашборд продаж</h1>
   <p class="source">Источник: {source}</p>
+
+  {warnings}
 
   <div class="tiles">{tiles}</div>
 

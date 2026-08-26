@@ -4,34 +4,41 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Дашборд продаж</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Wix+Madefor+Display:wght@600;700&family=Wix+Madefor+Text:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
+  /* Палитра рядов проверена валидатором на различимость при дальтонизме
+     в светлой и тёмной теме. Менять только вместе с повторной проверкой. */
   :root {
     color-scheme: light;
-    --plane: #f9f9f7;
-    --surface-1: #fcfcfb;
-    --text-primary: #0b0b0b;
-    --text-secondary: #52514e;
-    --muted: #898781;
-    --grid: #e1e0d9;
-    --axis: #c3c2b7;
-    --border: rgba(11,11,11,0.10);
+    --plane: #eef1f4;
+    --surface: #ffffff;
+    --ink: #0d1116;
+    --ink-2: #4a5763;
+    --muted: #7c8894;
+    --rule: #dee4ea;
+    --rule-soft: #edf1f4;
     --series-1: #2a78d6;
     --series-2: #eb6834;
     --warn-soft: #fdf5e6;
     --warn-line: #ecd6a6;
     --warn-ink: #8a5a10;
+
+    --display: "Wix Madefor Display", ui-sans-serif, system-ui, sans-serif;
+    --text: "Wix Madefor Text", ui-sans-serif, system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       color-scheme: dark;
-      --plane: #0d0d0d;
-      --surface-1: #1a1a19;
-      --text-primary: #ffffff;
-      --text-secondary: #c3c2b7;
-      --muted: #898781;
-      --grid: #2c2c2a;
-      --axis: #383835;
-      --border: rgba(255,255,255,0.10);
+      --plane: #090c0f;
+      --surface: #14181d;
+      --ink: #eef2f5;
+      --ink-2: #9fabb6;
+      --muted: #6f7b86;
+      --rule: #222a31;
+      --rule-soft: #1a1f25;
       --series-1: #3987e5;
       --series-2: #d95926;
       --warn-soft: #2a2116;
@@ -41,13 +48,13 @@
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
-    --plane: #0d0d0d;
-    --surface-1: #1a1a19;
-    --text-primary: #ffffff;
-    --text-secondary: #c3c2b7;
-    --grid: #2c2c2a;
-    --axis: #383835;
-    --border: rgba(255,255,255,0.10);
+    --plane: #090c0f;
+    --surface: #14181d;
+    --ink: #eef2f5;
+    --ink-2: #9fabb6;
+    --muted: #6f7b86;
+    --rule: #222a31;
+    --rule-soft: #1a1f25;
     --series-1: #3987e5;
     --series-2: #d95926;
     --warn-soft: #2a2116;
@@ -56,65 +63,186 @@
   }
 
   * { box-sizing: border-box; }
+
   body {
     margin: 0;
-    padding: 32px 20px 56px;
+    padding: 40px 20px 72px;
     background: var(--plane);
-    color: var(--text-primary);
-    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--ink);
+    font-family: var(--text);
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
   }
-  .wrap { max-width: 900px; margin: 0 auto; }
-  h1 { font-size: 22px; margin: 0 0 4px; }
-  .source { color: var(--muted); font-size: 13px; margin: 0 0 24px; }
 
-  .warn { background: var(--warn-soft); border: 1px solid var(--warn-line);
-           border-radius: 10px; padding: 15px 18px; margin-bottom: 12px; }
-  .warn-head { font-weight: 600; font-size: 14.5px; color: var(--warn-ink); }
-  .warn ul { margin: 8px 0 0; padding-left: 20px; }
-  .warn li { font-size: 14.5px; margin-bottom: 3px; }
-  .warn p { margin: 10px 0 0; font-size: 13.5px; color: var(--text-secondary); }
+  .wrap { max-width: 940px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
 
-  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-            gap: 12px; margin-bottom: 12px; }
-  .tile { background: var(--surface-1); border: 1px solid var(--border);
-           border-radius: 10px; padding: 16px 18px; }
-  .tile-title { color: var(--text-secondary); font-size: 13px; }
-  .tile-value { font-size: 30px; font-weight: 600; margin: 4px 0 2px; }
-  .tile-note { color: var(--muted); font-size: 12px; }
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 14px;
+    padding-bottom: 6px;
+  }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 5px;
+  }
+  h1 {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(24px, 4vw, 31px);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin: 0;
+  }
+  .stamp { text-align: right; display: flex; flex-direction: column; gap: 1px; }
+  .stamp-label {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .stamp-value { font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; }
+  .stamp-src { font-size: 12px; color: var(--muted); }
 
-  .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-             gap: 12px; }
-  .card { background: var(--surface-1); border: 1px solid var(--border);
-           border-radius: 10px; padding: 16px 18px 10px; }
-  .card h2 { font-size: 14px; font-weight: 600; margin: 0 0 10px;
-              color: var(--text-secondary); }
+  .warn {
+    background: var(--warn-soft);
+    border: 1px solid var(--warn-line);
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .warn-head { font-family: var(--display); font-weight: 600; font-size: 14.5px; color: var(--warn-ink); }
+  .warn ul { margin: 9px 0 0; padding-left: 19px; }
+  .warn li { font-size: 14px; margin-bottom: 3px; }
+  .warn p { margin: 11px 0 0; font-size: 13px; color: var(--ink-2); }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+  .tile {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 18px 20px 16px;
+  }
+  .tile-title {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .tile-value {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(28px, 4.6vw, 36px);
+    letter-spacing: -0.025em;
+    line-height: 1.12;
+    margin: 7px 0 3px;
+  }
+  .tile-note { font-size: 12.5px; color: var(--muted); }
+
+  .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 18px 20px 12px;
+  }
+  .card h2 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 14.5px;
+    letter-spacing: -0.005em;
+    margin: 0 0 14px;
+  }
+
   svg { width: 100%; height: auto; display: block; overflow: visible; }
-  .grid { stroke: var(--grid); stroke-width: 1; }
-  .axis { stroke: var(--axis); stroke-width: 1; }
-  .value { fill: var(--text-secondary); font-size: 12px; text-anchor: middle; }
-  .tick { fill: var(--muted); font-size: 12px; text-anchor: middle; }
-  .bar { cursor: default; }
-  .bar:hover path { opacity: 0.82; }
+  .grid { stroke: var(--rule-soft); stroke-width: 1; }
+  .axis { stroke: var(--rule); stroke-width: 1; }
+  .value {
+    fill: var(--ink-2);
+    font-family: var(--mono);
+    font-size: 11px;
+    text-anchor: middle;
+  }
+  .tick {
+    fill: var(--muted);
+    font-family: var(--mono);
+    font-size: 10.5px;
+    text-anchor: middle;
+  }
+  .bar path { transition: opacity .12s; }
+  .bar:hover path { opacity: 0.78; }
 
-  details { margin-top: 20px; }
-  summary { color: var(--text-secondary); font-size: 13px; cursor: pointer; }
-  table { border-collapse: collapse; margin-top: 12px; font-size: 14px;
-           font-variant-numeric: tabular-nums; }
-  th, td { border-bottom: 1px solid var(--border); padding: 7px 16px 7px 0;
-            text-align: left; }
-  th { color: var(--text-secondary); font-weight: 600; }
+  details {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 15px 20px;
+  }
+  summary {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    cursor: pointer;
+  }
+  summary:focus-visible { outline: 2px solid var(--series-1); outline-offset: 3px; border-radius: 3px; }
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; margin-top: 14px; font-size: 14px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 9px 24px 9px 0; border-bottom: 1px solid var(--rule-soft); white-space: nowrap; }
+  th {
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  tr:last-child td { border-bottom: none; }
 
-  #tip { position: fixed; pointer-events: none; opacity: 0;
-          background: var(--surface-1); color: var(--text-primary);
-          border: 1px solid var(--border); border-radius: 8px;
-          padding: 7px 10px; font-size: 13px; white-space: nowrap;
-          box-shadow: 0 4px 14px rgba(0,0,0,0.14); transition: opacity .1s; }
+  #tip {
+    position: fixed;
+    pointer-events: none;
+    opacity: 0;
+    background: var(--surface);
+    color: var(--ink);
+    border: 1px solid var(--rule);
+    border-radius: 9px;
+    padding: 7px 11px;
+    font-size: 13px;
+    white-space: nowrap;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.16);
+    transition: opacity .1s;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Дашборд продаж</h1>
-  <p class="source">Данные обновлены 26.08.2026, 16:00 · источник: Google Sheets API (по ключу)</p>
+
+  <header class="head">
+    <div>
+      <p class="eyebrow">Продажи по месяцам</p>
+      <h1>Дашборд продаж</h1>
+    </div>
+    <div class="stamp">
+      <span class="stamp-label">Данные обновлены</span>
+      <span class="stamp-value">26.08.2026, 16:00</span>
+      <span class="stamp-src">Google Sheets API (по ключу)</span>
+    </div>
+  </header>
 
   <div class="warn"><div class="warn-head">Данные требуют внимания (1 замечание)</div><ul><li>«Февраль»: 1 в «Выручка» — в 371 000 раз меньше остальных. Похоже на потерянные цифры.</li></ul><p>Цифры показаны как есть — исправлять их за вас нельзя. Поправьте в таблице и обновите страницу.</p></div>
 
@@ -126,9 +254,10 @@
   </div>
 
   <details>
-    <summary>Показать данные таблицей</summary>
-    <table><thead><tr><th>Месяц</th><th>Заказы</th><th>Выручка</th></tr></thead><tbody><tr><td>Январь</td><td>120</td><td>340000</td></tr><tr><td>Февраль</td><td>145</td><td>1</td></tr><tr><td>Март</td><td>132</td><td>371000</td></tr><tr><td>Апрель</td><td>178</td><td>5020000</td></tr><tr><td>Май</td><td>122</td><td>3245632</td></tr></tbody></table>
+    <summary>Данные таблицей</summary>
+    <div class="table-wrap"><table><thead><tr><th>Месяц</th><th>Заказы</th><th>Выручка</th></tr></thead><tbody><tr><td>Январь</td><td>120</td><td>340000</td></tr><tr><td>Февраль</td><td>145</td><td>1</td></tr><tr><td>Март</td><td>132</td><td>371000</td></tr><tr><td>Апрель</td><td>178</td><td>5020000</td></tr><tr><td>Май</td><td>122</td><td>3245632</td></tr></tbody></table></div>
   </details>
+
 </div>
 
 <div id="tip"></div>
@@ -138,8 +267,8 @@
     bar.addEventListener('mousemove', (e) => {
       tip.textContent = bar.dataset.label + ' · ' + bar.dataset.metric + ': ' + bar.dataset.value;
       tip.style.opacity = 1;
-      tip.style.left = (e.clientX + 14) + 'px';
-      tip.style.top = (e.clientY - 34) + 'px';
+      tip.style.left = Math.min(e.clientX + 14, window.innerWidth - 190) + 'px';
+      tip.style.top = (e.clientY - 38) + 'px';
     });
     bar.addEventListener('mouseleave', () => { tip.style.opacity = 0; });
   }

@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Дашборд продаж</title>
+<style>
+  :root {
+    color-scheme: light;
+    --plane: #f9f9f7;
+    --surface-1: #fcfcfb;
+    --text-primary: #0b0b0b;
+    --text-secondary: #52514e;
+    --muted: #898781;
+    --grid: #e1e0d9;
+    --axis: #c3c2b7;
+    --border: rgba(11,11,11,0.10);
+    --series-1: #2a78d6;
+    --series-2: #eb6834;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --plane: #0d0d0d;
+      --surface-1: #1a1a19;
+      --text-primary: #ffffff;
+      --text-secondary: #c3c2b7;
+      --muted: #898781;
+      --grid: #2c2c2a;
+      --axis: #383835;
+      --border: rgba(255,255,255,0.10);
+      --series-1: #3987e5;
+      --series-2: #d95926;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --plane: #0d0d0d;
+    --surface-1: #1a1a19;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255,255,255,0.10);
+    --series-1: #3987e5;
+    --series-2: #d95926;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 32px 20px 56px;
+    background: var(--plane);
+    color: var(--text-primary);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .source { color: var(--muted); font-size: 13px; margin: 0 0 24px; }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 12px; margin-bottom: 12px; }
+  .tile { background: var(--surface-1); border: 1px solid var(--border);
+           border-radius: 10px; padding: 16px 18px; }
+  .tile-title { color: var(--text-secondary); font-size: 13px; }
+  .tile-value { font-size: 30px; font-weight: 600; margin: 4px 0 2px; }
+  .tile-note { color: var(--muted); font-size: 12px; }
+
+  .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+             gap: 12px; }
+  .card { background: var(--surface-1); border: 1px solid var(--border);
+           border-radius: 10px; padding: 16px 18px 10px; }
+  .card h2 { font-size: 14px; font-weight: 600; margin: 0 0 10px;
+              color: var(--text-secondary); }
+  svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .grid { stroke: var(--grid); stroke-width: 1; }
+  .axis { stroke: var(--axis); stroke-width: 1; }
+  .value { fill: var(--text-secondary); font-size: 12px; text-anchor: middle; }
+  .tick { fill: var(--muted); font-size: 12px; text-anchor: middle; }
+  .bar { cursor: default; }
+  .bar:hover path { opacity: 0.82; }
+
+  details { margin-top: 20px; }
+  summary { color: var(--text-secondary); font-size: 13px; cursor: pointer; }
+  table { border-collapse: collapse; margin-top: 12px; font-size: 14px;
+           font-variant-numeric: tabular-nums; }
+  th, td { border-bottom: 1px solid var(--border); padding: 7px 16px 7px 0;
+            text-align: left; }
+  th { color: var(--text-secondary); font-weight: 600; }
+
+  #tip { position: fixed; pointer-events: none; opacity: 0;
+          background: var(--surface-1); color: var(--text-primary);
+          border: 1px solid var(--border); border-radius: 8px;
+          padding: 7px 10px; font-size: 13px; white-space: nowrap;
+          box-shadow: 0 4px 14px rgba(0,0,0,0.14); transition: opacity .1s; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Дашборд продаж</h1>
+  <p class="source">Источник: Google-таблица (CSV по ссылке)</p>
+
+  <div class="tiles"><div class="tile"><div class="tile-title">Всего заказов</div><div class="tile-value">397</div><div class="tile-note">за 3 мес.</div></div><div class="tile"><div class="tile-title">Всего выручка</div><div class="tile-value">1 109 000</div><div class="tile-note">за 3 мес.</div></div></div>
+
+  <div class="charts">
+    <div class="card"><h2>Заказы по месяцам</h2><svg viewBox="0 0 400 240" role="img" aria-label="Заказы по месяцам"><line x1="8" y1="75.0" x2="392" y2="75.0" class="grid"/><line x1="8" y1="120.0" x2="392" y2="120.0" class="grid"/><line x1="8" y1="165.0" x2="392" y2="165.0" class="grid"/><g class="bar" data-label="Январь" data-value="120" data-metric="Заказы"><path d="M106.0,210 V65.0 Q106.0,61.0 110.0,61.0 H158.0 Q162.0,61.0 162.0,65.0 V210 Z" fill="var(--series-1)"/><text x="134.0" y="53.0" class="value">120</text><text x="134.0" y="228.0" class="tick">Январь</text></g><g class="bar" data-label="Февраль" data-value="145" data-metric="Заказы"><path d="M172.0,210 V34.0 Q172.0,30.0 176.0,30.0 H224.0 Q228.0,30.0 228.0,34.0 V210 Z" fill="var(--series-1)"/><text x="200.0" y="22.0" class="value">145</text><text x="200.0" y="228.0" class="tick">Февраль</text></g><g class="bar" data-label="Март" data-value="132" data-metric="Заказы"><path d="M238.0,210 V50.1 Q238.0,46.1 242.0,46.1 H290.0 Q294.0,46.1 294.0,50.1 V210 Z" fill="var(--series-1)"/><text x="266.0" y="38.1" class="value">132</text><text x="266.0" y="228.0" class="tick">Март</text></g><line x1="8" y1="210" x2="392" y2="210" class="axis"/></svg></div>
+    <div class="card"><h2>Выручка по месяцам</h2><svg viewBox="0 0 400 240" role="img" aria-label="Выручка по месяцам"><line x1="8" y1="75.0" x2="392" y2="75.0" class="grid"/><line x1="8" y1="120.0" x2="392" y2="120.0" class="grid"/><line x1="8" y1="165.0" x2="392" y2="165.0" class="grid"/><g class="bar" data-label="Январь" data-value="340 000" data-metric="Выручка"><path d="M106.0,210 V60.2 Q106.0,56.2 110.0,56.2 H158.0 Q162.0,56.2 162.0,60.2 V210 Z" fill="var(--series-2)"/><text x="134.0" y="48.2" class="value">340 000</text><text x="134.0" y="228.0" class="tick">Январь</text></g><g class="bar" data-label="Февраль" data-value="398 000" data-metric="Выручка"><path d="M172.0,210 V34.0 Q172.0,30.0 176.0,30.0 H224.0 Q228.0,30.0 228.0,34.0 V210 Z" fill="var(--series-2)"/><text x="200.0" y="22.0" class="value">398 000</text><text x="200.0" y="228.0" class="tick">Февраль</text></g><g class="bar" data-label="Март" data-value="371 000" data-metric="Выручка"><path d="M238.0,210 V46.2 Q238.0,42.2 242.0,42.2 H290.0 Q294.0,42.2 294.0,46.2 V210 Z" fill="var(--series-2)"/><text x="266.0" y="34.2" class="value">371 000</text><text x="266.0" y="228.0" class="tick">Март</text></g><line x1="8" y1="210" x2="392" y2="210" class="axis"/></svg></div>
+  </div>
+
+  <details>
+    <summary>Показать данные таблицей</summary>
+    <table><thead><tr><th>Месяц</th><th>Заказы</th><th>Выручка</th></tr></thead><tbody><tr><td>Январь</td><td>120</td><td>340000</td></tr><tr><td>Февраль</td><td>145</td><td>398000</td></tr><tr><td>Март</td><td>132</td><td>371000</td></tr></tbody></table>
+  </details>
+</div>
+
+<div id="tip"></div>
+<script>
+  const tip = document.getElementById('tip');
+  for (const bar of document.querySelectorAll('.bar')) {
+    bar.addEventListener('mousemove', (e) => {
+      tip.textContent = bar.dataset.label + ' · ' + bar.dataset.metric + ': ' + bar.dataset.value;
+      tip.style.opacity = 1;
+      tip.style.left = (e.clientX + 14) + 'px';
+      tip.style.top = (e.clientY - 34) + 'px';
+    });
+    bar.addEventListener('mouseleave', () => { tip.style.opacity = 0; });
+  }
+</script>
+</body>
+</html>

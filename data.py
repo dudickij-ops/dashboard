@@ -136,6 +136,10 @@ def _check_labels(rows: list[dict], label_col: str) -> list[str]:
 # Во сколько раз значение должно превысить медиану, чтобы счесть его выбросом.
 OUTLIER_FACTOR = 50
 
+# Насколько значение должно оказаться НИЖЕ медианы. Порог мягче верхнего:
+# слабый месяц бывает, а вот значение в тысячу раз меньше — это потерянные цифры.
+OUTLIER_LOW_FACTOR = 1000
+
 
 def _check_column(rows: list[dict], label_col: str, col: str) -> list[str]:
     """Нечисловые, пустые и выбросы в одной числовой колонке."""
@@ -147,11 +151,17 @@ def _check_column(rows: list[dict], label_col: str, col: str) -> list[str]:
         raw = row.get(col, "")
         if raw == "":
             problems.append(f"«{name}»: пустое значение в «{col}».")
-        else:
-            try:
-                numbers.append((name, int(raw)))
-            except ValueError:
-                problems.append(f"«{name}»: «{raw}» в «{col}» — не число.")
+            continue
+        try:
+            value = int(raw)
+        except ValueError:
+            problems.append(f"«{name}»: «{raw}» в «{col}» — не число.")
+            continue
+
+        # Отрицательное неверно само по себе, без оглядки на остальные месяцы.
+        if value < 0:
+            problems.append(f"«{name}»: {value} в «{col}» — отрицательное значение.")
+        numbers.append((name, value))
 
     return problems + _check_outliers(numbers, col)
 
@@ -166,12 +176,26 @@ def _check_outliers(numbers: list[tuple[str, int]], col: str) -> list[str]:
     if median <= 0:
         return []
 
-    return [
-        f"«{name}»: {value:,} в «{col}» — в {value // median:,} раз больше "
-        f"остальных. Похоже на лишние нули.".replace(",", " ")
-        for name, value in numbers
-        if value > median * OUTLIER_FACTOR
-    ]
+    problems: list[str] = []
+
+    for name, value in numbers:
+        if value > median * OUTLIER_FACTOR:
+            problems.append(
+                f"«{name}»: {value:,} в «{col}» — в {value // median:,} раз больше "
+                f"остальных. Похоже на лишние нули.".replace(",", " ")
+            )
+        elif value == 0:
+            problems.append(
+                f"«{name}»: ноль в «{col}», у остальных месяцев около "
+                f"{median:,}. Проверьте.".replace(",", " ")
+            )
+        elif 0 < value * OUTLIER_LOW_FACTOR < median:
+            problems.append(
+                f"«{name}»: {value:,} в «{col}» — в {median // value:,} раз меньше "
+                f"остальных. Похоже на потерянные цифры.".replace(",", " ")
+            )
+
+    return problems
 
 
 def load_rows() -> list[dict]:

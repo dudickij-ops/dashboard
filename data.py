@@ -27,10 +27,9 @@ def _load_env_file() -> None:
 
 _load_env_file()
 
-SHEET_ID = os.environ.get(
-    "SHEET_ID", "1uhEFxpjNkM-2ZBLwqpWUFY0i-NK1FQNgaIldZH9iu3Y"
-)
-# Ключ берётся только из окружения. В код его вписывать нельзя.
+# Ни ключ, ни адрес таблицы в код не вписываются: репозиторий публичный,
+# а ссылка на таблицу — тоже доступ. Без .env код работает на выдуманных данных.
+SHEET_ID = os.environ.get("SHEET_ID", "")
 API_KEY = os.environ.get("GOOGLE_API_KEY", "")
 SHEET_RANGE = os.environ.get("SHEET_RANGE", "Лист1!A1:C100")
 

@@ -7,8 +7,25 @@
 import csv
 import io
 import os
+import pathlib
 import urllib.parse
 import urllib.request
+
+
+def _load_env_file() -> None:
+    """Читает .env рядом со скриптом. Файл в .gitignore — в репозиторий не попадёт."""
+    path = pathlib.Path(__file__).parent / ".env"
+    if not path.exists():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        os.environ.setdefault(key.strip(), value.strip().strip("'\""))
+
+
+_load_env_file()
 
 SHEET_ID = os.environ.get(
     "SHEET_ID", "1uhEFxpjNkM-2ZBLwqpWUFY0i-NK1FQNgaIldZH9iu3Y"

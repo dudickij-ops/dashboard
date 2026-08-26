@@ -30,8 +30,12 @@ MOCK_CSV = """Месяц,Заказы,Выручка
 
 
 def _rows_from_csv(text: str) -> list[dict]:
+    """Обрезает пробелы по краям: в таблицах их набивают руками и не замечают."""
     reader = csv.DictReader(io.StringIO(text.strip()))
-    return [dict(row) for row in reader]
+    return [
+        {(k or "").strip(): (v or "").strip() for k, v in row.items()}
+        for row in reader
+    ]
 
 
 def load_mock_rows() -> list[dict]:

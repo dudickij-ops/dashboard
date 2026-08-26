@@ -24,6 +24,10 @@
     --warn-soft: #fdf5e6;
     --warn-line: #ecd6a6;
     --warn-ink: #8a5a10;
+    /* На светлом фоне ядро приходится приглушать: пастель на белом
+       съедает контраст текста быстрее, чем на тёмном. */
+    --core-opacity: 0.55;
+    --surface-alpha: 60%;
 
     --display: "Wix Madefor Display", ui-sans-serif, system-ui, sans-serif;
     --text: "Wix Madefor Text", ui-sans-serif, system-ui, sans-serif;
@@ -44,6 +48,10 @@
       --warn-soft: #2a2116;
       --warn-line: #4d3d20;
       --warn-ink: #d9a44e;
+    --core-opacity: 0.72;
+    --surface-alpha: 74%;
+      --core-opacity: 0.72;
+      --surface-alpha: 74%;
     }
   }
   :root[data-theme="dark"] {
@@ -64,6 +72,19 @@
 
   * { box-sizing: border-box; }
 
+  /* Ядро живёт под содержимым и ничего не перехватывает.
+     Прозрачность разная по темам: на светлом фоне оно должно быть тише,
+     иначе текст теряет контраст. */
+  #core {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    opacity: var(--core-opacity);
+  }
+
   body {
     margin: 0;
     padding: 40px 20px 72px;
@@ -75,7 +96,27 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  .wrap { max-width: 940px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+  .wrap {
+    max-width: 940px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Карточки слегка прозрачны, чтобы ядро читалось сквозь них.
+     Там, где размытие фона не поддерживается, остаётся плотный фон. */
+  .tile, .card, details {
+    background: color-mix(in srgb, var(--surface) calc(var(--surface-alpha) + 16%), transparent);
+  }
+  @supports (backdrop-filter: blur(1px)) {
+    .tile, .card, details {
+      background: color-mix(in srgb, var(--surface) var(--surface-alpha), transparent);
+      backdrop-filter: blur(14px) saturate(1.05);
+    }
+  }
 
   .head {
     display: flex;
@@ -230,6 +271,157 @@
 </style>
 </head>
 <body>
+<canvas id="core" aria-hidden="true"></canvas>
+<script>
+(function () {
+  var canvas = document.getElementById('core');
+  if (!canvas) return;
+
+  var gl = canvas.getContext('webgl', { alpha: true, antialias: false, premultipliedAlpha: false })
+        || canvas.getContext('experimental-webgl', { alpha: true, antialias: false });
+  if (!gl) { canvas.style.display = 'none'; return; }
+
+  var VERT = [
+    'attribute vec2 p;',
+    'void main() { gl_Position = vec4(p, 0.0, 1.0); }'
+  ].join('\n');
+
+  var FRAG = [
+    'precision highp float;',
+    'uniform vec2 uRes;',
+    'uniform float uTime;',
+
+    'float hash(vec3 p) {',
+    '  p = fract(p * 0.3183099 + 0.1);',
+    '  p *= 17.0;',
+    '  return fract(p.x * p.y * p.z * (p.x + p.y + p.z));',
+    '}',
+
+    'float noise(vec3 x) {',
+    '  vec3 i = floor(x);',
+    '  vec3 f = fract(x);',
+    '  f = f * f * (3.0 - 2.0 * f);',
+    '  return mix(',
+    '    mix(mix(hash(i + vec3(0.0, 0.0, 0.0)), hash(i + vec3(1.0, 0.0, 0.0)), f.x),',
+    '        mix(hash(i + vec3(0.0, 1.0, 0.0)), hash(i + vec3(1.0, 1.0, 0.0)), f.x), f.y),',
+    '    mix(mix(hash(i + vec3(0.0, 0.0, 1.0)), hash(i + vec3(1.0, 0.0, 1.0)), f.x),',
+    '        mix(hash(i + vec3(0.0, 1.0, 1.0)), hash(i + vec3(1.0, 1.0, 1.0)), f.x), f.y), f.z);',
+    '}',
+
+    'float fbm(vec3 p) {',
+    '  float a = 0.5;',
+    '  float s = 0.0;',
+    '  for (int i = 0; i < 5; i++) { s += a * noise(p); p *= 2.03; a *= 0.5; }',
+    '  return s;',
+    '}',
+
+    'vec3 iridescence(float t) {',
+    '  return 0.5 + 0.5 * cos(6.28318 * (vec3(0.0, 0.33, 0.67) + t));',
+    '}',
+
+    'void main() {',
+    '  vec2 uv = (gl_FragCoord.xy - 0.5 * uRes) / min(uRes.x, uRes.y);',
+    '  vec3 ro = vec3(0.0, 0.0, 2.7);',
+    '  vec3 rd = normalize(vec3(uv * 1.25, -1.7));',
+
+    '  float b = dot(ro, rd);',
+    '  float c = dot(ro, ro) - 1.0;',
+    '  float h = b * b - c;',
+
+    '  float t = uTime * 0.09;',
+    '  vec3 col = vec3(0.0);',
+    '  float alpha = 0.0;',
+
+    '  if (h > 0.0) {',
+    '    vec3 pos = ro + rd * (-b - sqrt(h));',
+    '    vec3 n = normalize(pos);',
+    '    float ca = cos(t);',
+    '    float sa = sin(t);',
+    '    vec3 q = vec3(n.x * ca - n.z * sa, n.y, n.x * sa + n.z * ca);',
+    '    float f = fbm(q * 2.6 + vec3(0.0, t * 1.4, 0.0));',
+    '    float fres = pow(1.0 - max(dot(n, -rd), 0.0), 2.2);',
+    '    col = iridescence(f * 0.85 + t * 0.7 + 0.55) * (0.30 + 0.85 * f);',
+    '    col += vec3(0.45, 0.68, 1.0) * fres * 0.9;',
+    '    alpha = 0.50 + 0.45 * f;',
+    '  }',
+
+    '  float d = length(uv);',
+    '  float glow = exp(-max(d - 0.42, 0.0) * 5.0);',
+    '  col += iridescence(t * 0.7 + 0.55) * glow * 0.30;',
+    '  alpha = max(alpha, glow * 0.5);',
+
+    '  gl_FragColor = vec4(col, clamp(alpha, 0.0, 1.0));',
+    '}'
+  ].join('\n');
+
+  function compile(type, src) {
+    var sh = gl.createShader(type);
+    gl.shaderSource(sh, src);
+    gl.compileShader(sh);
+    if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) return null;
+    return sh;
+  }
+
+  var vs = compile(gl.VERTEX_SHADER, VERT);
+  var fs = compile(gl.FRAGMENT_SHADER, FRAG);
+  if (!vs || !fs) { canvas.style.display = 'none'; return; }
+
+  var prog = gl.createProgram();
+  gl.attachShader(prog, vs);
+  gl.attachShader(prog, fs);
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) { canvas.style.display = 'none'; return; }
+  gl.useProgram(prog);
+
+  var buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  var loc = gl.getAttribLocation(prog, 'p');
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  gl.clearColor(0, 0, 0, 0);
+
+  var uRes = gl.getUniformLocation(prog, 'uRes');
+  var uTime = gl.getUniformLocation(prog, 'uTime');
+
+  // Считаем в пониженном разрешении: пиксели фона стоят дорого,
+  // а размытое ядро от этого не страдает.
+  function resize() {
+    var scale = Math.min(window.devicePixelRatio || 1, 1.5) * 0.7;
+    var w = Math.max(1, Math.round(canvas.clientWidth * scale));
+    var h = Math.max(1, Math.round(canvas.clientHeight * scale));
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w;
+      canvas.height = h;
+    }
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.uniform2f(uRes, canvas.width, canvas.height);
+  }
+
+  function draw(seconds) {
+    gl.uniform1f(uTime, seconds);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+
+  // Кому анимация мешает — тот получает один статичный кадр.
+  var still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  window.addEventListener('resize', function () { resize(); if (still) draw(0); });
+  resize();
+
+  if (still) { draw(0); return; }
+
+  var start = performance.now();
+  (function frame(now) {
+    if (!document.hidden) { resize(); draw((now - start) / 1000); }
+    requestAnimationFrame(frame);
+  })(start);
+})();
+</script>
 <div class="wrap">
 
   <header class="head">

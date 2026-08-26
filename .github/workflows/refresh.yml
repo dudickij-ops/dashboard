@@ -43,14 +43,16 @@ jobs:
             exit 1
           fi
 
+      # state.json обязан ехать вместе со страницей: в нём лежит время
+      # последнего изменения данных. Потеряется — дата поедет каждый час.
       - name: Закоммитить, если данные изменились
         run: |
-          if git diff --quiet -- index.html; then
+          if git diff --quiet -- index.html state.json; then
             echo "Данные не менялись, коммит не нужен."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html
+          git add index.html state.json
           git commit -m "Обновление данных из таблицы"
           git push

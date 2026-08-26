@@ -4,12 +4,21 @@
 Результат: index.html рядом со скриптом.
 """
 
+import hashlib
 import html
+import json
 import pathlib
+from datetime import datetime, timedelta, timezone
 
 from data import check_rows, load_rows, source_name
 
-OUT = pathlib.Path(__file__).parent / "index.html"
+HERE = pathlib.Path(__file__).parent
+OUT = HERE / "index.html"
+STATE = HERE / "state.json"
+
+# Заказчик в Москве, сборка идёт в UTC. Фиксированное смещение, а не имя зоны:
+# на раннере может не оказаться базы часовых поясов.
+MSK = timezone(timedelta(hours=3))
 
 # Названия колонок в таблице. Поменялись заголовки — правим здесь, в одном месте.
 COL_MONTH = "Месяц"
@@ -104,6 +113,36 @@ def table(rows: list[dict]) -> str:
     return f"<table><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table>"
 
 
+def fingerprint(rows: list[dict]) -> str:
+    """Отпечаток данных. Меняется только когда меняются сами цифры."""
+    payload = json.dumps(rows, ensure_ascii=False, sort_keys=True)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def resolve_updated_at(rows: list[dict], now: datetime, state_file: pathlib.Path) -> str:
+    """Возвращает время последнего ИЗМЕНЕНИЯ данных, а не время сборки.
+
+    Иначе страница менялась бы каждый час, и каждая пересборка давала бы
+    коммит и деплой на ровном месте.
+    """
+    current = fingerprint(rows)
+
+    try:
+        saved = json.loads(state_file.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        saved = {}
+
+    if saved.get("fingerprint") == current and saved.get("updated_at"):
+        return saved["updated_at"]
+
+    stamp = now.astimezone(MSK).strftime("%d.%m.%Y, %H:%M")
+    state_file.write_text(
+        json.dumps({"fingerprint": current, "updated_at": stamp}, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    return stamp
+
+
 def warnings_block(problems: list[str]) -> str:
     """Претензии к данным показываем на самой странице, а не в консоли сборки."""
     if not problems:
@@ -124,8 +163,11 @@ def build() -> str:
     revenue = sum(int(r[COL_REVENUE]) for r in rows)
     months = len(rows)
 
+    updated = resolve_updated_at(rows, datetime.now(timezone.utc), STATE)
+
     return TEMPLATE.format(
         source=html.escape(source_name()),
+        updated=html.escape(updated),
         warnings=warnings_block(check_rows(rows, COL_MONTH, [COL_ORDERS, COL_REVENUE])),
         tiles=stat_tile("Всего заказов", money(orders), f"за {months} мес.")
         + stat_tile("Всего выручка", money(revenue), f"за {months} мес."),
@@ -251,7 +293,7 @@ TEMPLATE = """<!doctype html>
 <body>
 <div class="wrap">
   <h1>Дашборд продаж</h1>
-  <p class="source">Источник: {source}</p>
+  <p class="source">Данные обновлены {updated} · источник: {source}</p>
 
   {warnings}
 

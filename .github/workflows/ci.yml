@@ -1,0 +1,26 @@
+name: ci
+
+# Ворота: тесты гоняются на каждый пуш и каждый pull request.
+# Красные тесты — красный статус, и мержить нечего.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  tests:
+    name: tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install pytest
+        run: python -m pip install --quiet pytest
+
+      # Без .env тесты идут на выдуманных данных и в сеть не ходят.
+      - name: Run tests
+        run: python -m pytest -q
